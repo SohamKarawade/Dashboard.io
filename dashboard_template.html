@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ritvaa Sales Intelligence Dashboard</title>
+<script>
+/* ===== Chart.js 4.4.4 (bundled inline — no internet needed) ===== */
+__CHART_JS__
+</script>
+<script>
+/* ===== chartjs-plugin-datalabels 2.2.0 (bundled inline) ===== */
+__DATALABELS_JS__
+</script>
+<style>
+  :root{
+    --bg:#0a0b0f;
+    --bg-elev:#121319;
+    --card:#15161d;
+    --card-border:#22232c;
+    --card-hover:#1b1c25;
+    --text:#f2f3f7;
+    --text-dim:#8b8d9a;
+    --text-faint:#565866;
+    --accent:#7c6cff;
+    --accent-2:#a78bfa;
+    --accent-glow:rgba(124,108,255,0.35);
+    --green:#34d399;
+    --red:#fb7185;
+    --amber:#fbbf24;
+    --blue:#38bdf8;
+    --pink:#f472b6;
+    --cyan:#22d3ee;
+    --radius:16px;
+    --radius-sm:10px;
+    --shadow: 0 8px 24px rgba(0,0,0,0.35);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  [data-theme="light"]{
+    --bg:#f4f5fa;
+    --bg-elev:#ffffff;
+    --card:#ffffff;
+    --card-border:#e7e8f0;
+    --card-hover:#fbfbfe;
+    --text:#14151c;
+    --text-dim:#6b6d7c;
+    --text-faint:#9799a6;
+    --shadow: 0 8px 24px rgba(20,21,40,0.08);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family: var(--font);
+    background: radial-gradient(circle at 15% 0%, rgba(124,108,255,0.08), transparent 40%),
+                radial-gradient(circle at 85% 20%, rgba(244,114,182,0.06), transparent 40%),
+                var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--card-border); border-radius:8px; }
+
+  .navbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--card-border);
+    position: sticky; top:0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(14px);
+    flex-wrap: wrap; gap:12px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:10px;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; color:white; font-size:15px;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .brand-text h1{ font-size:16px; font-weight:700; letter-spacing:-0.02em; }
+  .brand-text span{ font-size:11px; color:var(--text-dim); }
+  .nav-actions{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .badge-pill{
+    background: var(--card);
+    border:1px solid var(--card-border);
+    color: var(--text-dim);
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .icon-btn{
+    width:38px;height:38px; border-radius:10px; display:flex;align-items:center;justify-content:center;
+    background:var(--card); border:1px solid var(--card-border); cursor:pointer; transition:all .2s ease;
+  }
+  .icon-btn:hover{ border-color:var(--accent); transform: translateY(-1px);}
+
+  .container{ padding: 28px 32px 60px; max-width: 1600px; margin:0 auto; }
+
+  .page-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;}
+  .page-head h2{ font-size:22px; font-weight:800; letter-spacing:-0.02em; }
+  .page-head p{ color:var(--text-dim); font-size:13px; margin-top:4px; }
+  .live-dot{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--green); font-weight:600;}
+  .live-dot .dot{ width:7px;height:7px;border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation: pulse 1.6s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+  .kpi-grid{
+    display:grid; grid-template-columns: repeat(5, 1fr); gap:16px; margin-bottom: 24px;
+  }
+  @media(max-width:1400px){ .kpi-grid{ grid-template-columns: repeat(3,1fr);} }
+  @media(max-width:800px){ .kpi-grid{ grid-template-columns: repeat(2,1fr);} }
+
+  .kpi-card{
+    background: var(--card);
+    border:1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 16px;
+    position:relative;
+    overflow:hidden;
+    box-shadow: var(--shadow);
+    opacity:0; transform: translateY(14px);
+    animation: rise 0.6s ease forwards;
+    transition: border-color .25s ease, transform .25s ease;
+  }
+  .kpi-card:hover{ border-color: var(--accent); transform: translateY(-3px); }
+  @keyframes rise{ to{ opacity:1; transform:none; } }
+  .kpi-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .kpi-label{ font-size:11.5px; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .kpi-icon{ width:26px;height:26px;border-radius:8px; display:flex;align-items:center;justify-content:center; font-size:13px; flex-shrink:0; }
+  .kpi-value{ font-size:23px; font-weight:800; letter-spacing:-0.02em; margin-bottom:6px; }
+  .kpi-foot{ display:flex; align-items:center; justify-content:space-between; }
+  .trend{ font-size:11.5px; font-weight:700; display:flex; align-items:center; gap:3px; padding:2px 7px; border-radius:20px; white-space:nowrap; }
+  .trend.up{ color:var(--green); background: rgba(52,211,153,0.12); }
+  .trend.down{ color:var(--red); background: rgba(251,113,133,0.12); }
+  .spark{ width:60px; height:24px; }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .card{
+    background: var(--card);
+    border:1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding:20px;
+    box-shadow: var(--shadow);
+    opacity:0; transform: translateY(14px);
+    animation: rise 0.6s ease forwards;
+    display:flex;
+    flex-direction:column;
+  }
+  .card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .card-title{ font-size:14px; font-weight:700; }
+  .card-sub{ font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .chip-row{ display:flex; gap:6px; }
+  .chip{ font-size:11px; padding:4px 9px; border-radius:20px; border:1px solid var(--card-border); color:var(--text-dim); cursor:pointer; font-weight:600; }
+  .chip.active{ background: var(--accent); border-color:var(--accent); color:white; }
+
+  .col-8{ grid-column: span 8; } .col-4{ grid-column: span 4; }
+  .col-6{ grid-column: span 6; } .col-12{ grid-column: span 12; }
+  .col-5{ grid-column: span 5; } .col-7{ grid-column: span 7; }
+  .col-3{ grid-column: span 3; }
+  @media(max-width:1100px){ .col-8,.col-4,.col-6,.col-5,.col-7,.col-3{ grid-column: span 12; } }
+
+  /* every chart canvas sits inside a fixed-height box so Chart.js
+     (responsive:true + maintainAspectRatio:false) has something concrete
+     to size against — without this the canvas stretches unbounded. */
+  .chart-box{ position:relative; width:100%; height:260px; }
+  .chart-box.tall{ height:300px; }
+  .chart-box.short{ height:190px; }
+  /* Vendor chart: fixed-height window that scrolls internally once there
+     are more vendors than comfortably fit, instead of squeezing bars
+     together. The canvas grows to fit every vendor at a fixed bar
+     height; the outer box stays a fixed size and scrolls. */
+  .chart-box.scrollable{ overflow-y:auto; overflow-x:hidden; }
+  .vendor-canvas-wrap{ position:relative; width:100%; }
+
+  .legend-list{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .legend-row{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; }
+  .legend-key{ display:flex; align-items:center; gap:8px; color:var(--text-dim); }
+  .legend-dot{ width:9px;height:9px;border-radius:3px; }
+  .legend-val{ font-weight:700; }
+
+  .table-wrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse: collapse; font-size:13px; }
+  thead th{
+    text-align:left; padding:10px 12px; color:var(--text-dim); font-weight:600; font-size:11px;
+    text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--card-border);
+    cursor:pointer; user-select:none; white-space:nowrap;
+  }
+  thead th:hover{ color:var(--text); }
+  tbody td{ padding:11px 12px; border-bottom:1px solid var(--card-border); white-space:nowrap; }
+  tbody tr{ transition: background .15s ease; }
+  tbody tr:hover{ background: var(--card-hover); }
+  .badge{ font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; display:inline-block; background: rgba(124,108,255,0.14); color: var(--accent-2); }
+  .table-controls{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  .search{
+    background:var(--bg-elev); border:1px solid var(--card-border); border-radius:10px;
+    padding:9px 14px 9px 34px; font-size:13px; color:var(--text); width:240px; font-family:var(--font);
+    position:relative;
+  }
+  .select{
+    background: var(--card);
+    border:1px solid var(--card-border);
+    color: var(--text);
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight:500;
+    font-family: var(--font);
+    cursor:pointer;
+  }
+  .search-wrap{ position:relative; }
+  .search-wrap::before{ content:'⌕'; position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-faint); font-size:15px; }
+  .pagination{ display:flex; align-items:center; gap:8px; justify-content:flex-end; margin-top:14px; font-size:12px; color:var(--text-dim); }
+  .page-btn{ width:30px;height:30px; border-radius:8px; border:1px solid var(--card-border); background:var(--bg-elev); color:var(--text); cursor:pointer; }
+  .page-btn:hover{ border-color:var(--accent); }
+  .page-btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  .footer{ text-align:center; color:var(--text-faint); font-size:12px; padding: 20px 0 6px; }
+
+  /* ===================== PRINT / SAVE-AS-PDF ===================== */
+  @media print{
+    *{
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    :root, [data-theme="dark"], [data-theme="light"]{
+      --bg:#ffffff;
+      --bg-elev:#ffffff;
+      --card:#ffffff;
+      --card-border:#dcdde3;
+      --card-hover:#ffffff;
+      --text:#14151c;
+      --text-dim:#55576b;
+      --text-faint:#8a8c99;
+      --shadow:none;
+      --accent-glow:transparent;
+    }
+    body{ background:#ffffff !important; }
+    .navbar{ position:static; backdrop-filter:none; border-bottom:2px solid #ddd; }
+    #themeToggle, .search-wrap, #statusFilter, #channelFilter,
+    .chip-row, .pagination, .page-btn, #dataStatusBanner{
+      display:none !important;
+    }
+    .kpi-card, .card{
+      box-shadow:none !important;
+      border:1px solid #ddd !important;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .kpi-card{ animation:none !important; opacity:1 !important; transform:none !important; }
+    .card{ animation:none !important; opacity:1 !important; transform:none !important; }
+    .kpi-grid{ grid-template-columns: repeat(3, 1fr) !important; }
+    .grid{ grid-template-columns: repeat(2, 1fr) !important; break-inside: avoid; }
+    .col-8,.col-4,.col-6,.col-5,.col-7,.col-3,.col-12{ grid-column: span 2 !important; }
+    .table-wrap{ overflow:visible !important; }
+    table{ font-size:11px; }
+    .container{ padding: 12px 16px 20px; }
+    .chart-box.scrollable{ overflow:visible !important; height:auto !important; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+<nav class="navbar">
+  <div class="brand">
+    <div class="brand-mark">R</div>
+    <div class="brand-text">
+      <h1>Ritvaa Sales Intelligence</h1>
+      <span>Sales Detail · Order Analytics</span>
+    </div>
+  </div>
+  <div class="nav-actions">
+    <span class="live-dot" id="liveDot"><span class="dot"></span>__DATA_SOURCE_LABEL__</span>
+    <div class="icon-btn" id="themeToggle" title="Toggle theme">🌙</div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div id="dataStatusBanner" style="display:none; margin-bottom:16px; padding:12px 16px; border-radius:10px; font-size:13px; font-weight:600;"></div>
+
+  <div class="page-head">
+    <div>
+      <h2>Overview</h2>
+      <p id="rangeLabel">Sales performance overview</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="grid">
+    <div class="card col-12" style="animation-delay:.05s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Revenue Trend</div>
+          <div class="card-sub">Daily invoiced revenue vs orders · every day in range shown, even zero-order days</div>
+        </div>
+        <div class="chip-row">
+          <div class="chip active" data-metric="revenue">Revenue</div>
+          <div class="chip" data-metric="orders">Orders</div>
+        </div>
+      </div>
+      <div class="chart-box tall"><canvas id="revenueTrendChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card col-6" style="animation-delay:.15s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Top SKUs</div>
+          <div class="card-sub">Bar · by revenue, top 8</div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="topSkuChart"></canvas></div>
+    </div>
+    <div class="card col-6" style="animation-delay:.2s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Order Status</div>
+          <div class="card-sub">Bar · every status found in your data</div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="statusChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card col-5" style="animation-delay:.3s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Revenue by State</div>
+          <div class="card-sub">Bar · top 8 states</div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="geoChart"></canvas></div>
+    </div>
+    <div class="card col-4" style="animation-delay:.35s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Discount vs Margin</div>
+          <div class="card-sub">Line · daily average, dual axis</div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="discountMarginChart"></canvas></div>
+    </div>
+    <div class="card col-3" style="animation-delay:.4s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Order Type</div>
+          <div class="card-sub">Pie · Prepaid vs COD</div>
+        </div>
+      </div>
+      <div class="chart-box short"><canvas id="orderTypeChart"></canvas></div>
+      <div class="legend-list" id="orderTypeLegend"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card col-6" style="animation-delay:.45s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Vendor Performance</div>
+          <div class="card-sub">Horizontal bar · highest revenue first · scrolls if long</div>
+        </div>
+      </div>
+      <div class="chart-box scrollable" id="vendorScrollBox"><div class="vendor-canvas-wrap" id="vendorCanvasWrap"><canvas id="vendorChart"></canvas></div></div>
+    </div>
+    <div class="card col-3" style="animation-delay:.5s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">On-Hold Orders</div>
+          <div class="card-sub">Pie · held vs normal</div>
+        </div>
+      </div>
+      <div class="chart-box short"><canvas id="onHoldChart"></canvas></div>
+      <div class="legend-list" id="onHoldLegend"></div>
+    </div>
+    <div class="card col-3" style="animation-delay:.55s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Replacement Orders</div>
+          <div class="card-sub">Pie · replaced vs normal</div>
+        </div>
+      </div>
+      <div class="chart-box short"><canvas id="replacementChart"></canvas></div>
+      <div class="legend-list" id="replacementLegend"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card col-4" style="animation-delay:.6s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Sub Category</div>
+          <div class="card-sub">Bar · revenue by sub category, top 8</div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="subCategoryChart"></canvas></div>
+    </div>
+    <div class="card col-4" style="animation-delay:.65s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Order Value Breakdown</div>
+          <div class="card-sub">Bar · Price, Ship Cost, Packing Cost, Discount, Tax</div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="breakdownChart"></canvas></div>
+    </div>
+    <div class="card col-4" style="animation-delay:.7s">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Discount Code Usage</div>
+          <div class="card-sub">Bar · orders per discount code</div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="discountCodeChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card col-12" style="animation-delay:.75s">
+    <div class="table-controls">
+      <div>
+        <div class="card-title">Recent Orders</div>
+        <div class="card-sub" id="tableCount">— orders</div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div class="search-wrap">
+          <input class="search" id="tableSearch" placeholder="Search order, city, SKU..." />
+        </div>
+        <select class="select" id="statusFilter">
+          <option value="">All statuses</option>
+        </select>
+        <select class="select" id="channelFilter">
+          <option value="">All channels</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="ordersTable">
+        <thead>
+          <tr>
+            <th data-key="orderNo">Order No</th>
+            <th data-key="orderDate">Date</th>
+            <th data-key="category">Category</th>
+            <th data-key="skuDesc">SKU</th>
+            <th data-key="vendorName">Vendor</th>
+            <th data-key="city">City</th>
+            <th data-key="channelName">Channel</th>
+            <th data-key="orderType">Type</th>
+            <th data-key="status">Status</th>
+            <th data-key="quantity">Qty</th>
+            <th data-key="invoiced">Invoiced</th>
+            <th data-key="gmPercent">GM %</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <div class="footer">Ritvaa Sales Intelligence</div>
+</div>
+
+<script>
+// All demo data lives right inside this file — just open it, nothing else needed.
+const DEMO_DATA = __SALES_DATA__;
+
+let RAW_DATA = DEMO_DATA;
+let filteredData = [];
+let prevHalf = [], currHalf = [];
+
+// ---------- Theme ----------
+const themeToggle = document.getElementById('themeToggle');
+themeToggle.addEventListener('click', () => {
+  const body = document.body;
+  const isDark = body.getAttribute('data-theme') === 'dark';
+  body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  themeToggle.textContent = isDark ? '☀️' : '🌙';
+  Chart.defaults.color = getCss('--text-dim');
+  Chart.defaults.borderColor = getCss('--card-border');
+  refreshAllCharts();
+});
+
+function getCss(varName){
+  return getComputedStyle(document.body).getPropertyValue(varName).trim();
+}
+
+// ---------- Helpers ----------
+const fmtINR = (n) => '₹' + Number(n).toLocaleString('en-IN', {maximumFractionDigits:0});
+const fmtCompact = (n) => {
+  n = Number(n);
+  const sign = n < 0 ? '-' : '';
+  n = Math.abs(n);
+  if (n >= 10000000) return sign + '₹' + (n/10000000).toFixed(2) + 'Cr';
+  if (n >= 100000) return sign + '₹' + (n/100000).toFixed(2) + 'L';
+  if (n >= 1000) return sign + '₹' + (n/1000).toFixed(1) + 'K';
+  return sign + '₹' + n.toFixed(0);
+};
+const fmtNum = (n) => Number(n).toLocaleString('en-IN');
+const fmtPct = (n) => Number(n).toFixed(1) + '%';
+
+function computePeriods(){
+  filteredData = RAW_DATA.slice();
+  const sortedByDate = [...RAW_DATA].sort((a,b) => new Date(a.orderDate) - new Date(b.orderDate));
+  const midIdx = Math.floor(sortedByDate.length / 2);
+  prevHalf = sortedByDate.slice(0, midIdx);
+  currHalf = sortedByDate.slice(midIdx);
+}
+
+// Every calendar day between the earliest and latest order date, inclusive —
+// used so charts never silently skip a day just because it had no orders.
+// Everything here is done in UTC on purpose: mixing local-time parsing with
+// toISOString() (always UTC) shifts every date back a day for anyone in a
+// timezone ahead of UTC (e.g. India, UTC+5:30), which silently drops the
+// last real day from the list. Staying in UTC end-to-end avoids that drift.
+function getAllDaysInRange(data){
+  if (!data.length) return [];
+  const dates = data.map(d => d.orderDate.slice(0,10)).sort();
+  const start = new Date(dates[0] + 'T00:00:00Z');
+  const end = new Date(dates[dates.length-1] + 'T00:00:00Z');
+  const days = [];
+  for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate()+1)){
+    days.push(d.toISOString().slice(0,10));
+  }
+  return days;
+}
+
+function sparkData(data, key, buckets=14){
+  const sorted = [...data].sort((a,b) => new Date(a.orderDate) - new Date(b.orderDate));
+  if (!sorted.length) return [];
+  const min = new Date(sorted[0].orderDate), max = new Date(sorted[sorted.length-1].orderDate);
+  const span = Math.max(1, (max-min) / buckets);
+  const arr = new Array(buckets).fill(0);
+  sorted.forEach(d => {
+    let idx = Math.floor((new Date(d.orderDate)-min)/span);
+    idx = Math.min(buckets-1, Math.max(0, idx));
+    if (key === 'count') arr[idx] += 1;
+    else if (key === 'uniqueCustomers') arr[idx] += 1;
+    else if (key === 'onHoldRate') arr[idx] += (d.onHoldStatus === 'Yes' ? 1 : 0);
+    else arr[idx] += d[key];
+  });
+  return arr;
+}
+
+// ---------- KPI computation ----------
+function computeKPIs(data){
+  const revenue = data.reduce((s,d) => s + d.invoiced, 0);
+  const orders = new Set(data.map(d => d.orderNo)).size;
+  const aov = orders ? revenue / orders : 0;
+  const totalGM = data.reduce((s,d) => s + d.grossMargin, 0);
+  const totalTaxable = data.reduce((s,d) => s + (d.invoiced - d.tax), 0);
+  const gmPct = totalTaxable ? (totalGM / totalTaxable) * 100 : 0;
+  const totalDiscount = data.reduce((s,d) => s + d.discount, 0);
+  const totalTax = data.reduce((s,d) => s + d.tax, 0);
+  const units = data.reduce((s,d) => s + d.quantity, 0);
+  const uniqueCustomers = new Set(data.map(d => d.customerCode)).size;
+  const onHold = data.filter(d => d.onHoldStatus === 'Yes').length;
+  const onHoldRate = data.length ? (onHold / data.length) * 100 : 0;
+  return { revenue, orders, aov, gmPct, totalGM, totalDiscount, totalTax, units, uniqueCustomers, onHoldRate };
+}
+
+function pctChange(curr, prev){
+  if (!prev) return 0;
+  return ((curr - prev) / prev) * 100;
+}
+
+const kpiDefs = [
+  { key:'revenue', label:'Total Revenue', icon:'💰', color:'var(--accent)', fmt:fmtCompact, dataKey:'invoiced' },
+  { key:'orders', label:'Total Orders', icon:'🧾', color:'var(--blue)', fmt:fmtNum, dataKey:'count' },
+  { key:'aov', label:'Avg Order Value', icon:'📈', color:'var(--green)', fmt:fmtCompact, dataKey:'invoiced' },
+  { key:'gmPct', label:'Gross Margin %', icon:'🎯', color:'var(--pink)', fmt:fmtPct, dataKey:'grossMargin' },
+  { key:'totalGM', label:'Total Gross Margin', icon:'💹', color:'var(--cyan)', fmt:fmtCompact, dataKey:'grossMargin' },
+  { key:'totalDiscount', label:'Discount Given', icon:'🏷️', color:'var(--amber)', fmt:fmtCompact, dataKey:'discount' },
+  { key:'totalTax', label:'Tax Collected', icon:'🧮', color:'var(--accent-2)', fmt:fmtCompact, dataKey:'tax' },
+  { key:'units', label:'Units Sold', icon:'📦', color:'var(--blue)', fmt:fmtNum, dataKey:'quantity' },
+  { key:'uniqueCustomers', label:'Unique Customers', icon:'👥', color:'var(--green)', fmt:fmtNum, dataKey:'uniqueCustomers' },
+  { key:'onHoldRate', label:'On-Hold Rate', icon:'⏸️', color:'var(--red)', fmt:fmtPct, dataKey:'onHoldRate' },
+];
+
+let sparkCharts = [];
+
+function renderKPIs(){
+  const kpis = computeKPIs(filteredData);
+  const prevKpis = computeKPIs(prevHalf);
+  const grid = document.getElementById('kpiGrid');
+  grid.innerHTML = '';
+  sparkCharts.forEach(c => c.destroy());
+  sparkCharts = [];
+
+  kpiDefs.forEach((def, i) => {
+    const val = kpis[def.key];
+    const prevVal = prevKpis[def.key];
+    const change = pctChange(val, prevVal);
+    const up = change >= 0;
+    const card = document.createElement('div');
+    card.className = 'kpi-card';
+    card.style.animationDelay = (i*0.04) + 's';
+    card.innerHTML = `
+      <div class="kpi-top">
+        <span class="kpi-label">${def.label}</span>
+        <span class="kpi-icon" style="background:color-mix(in srgb, ${def.color} 18%, transparent); color:${def.color}">${def.icon}</span>
+      </div>
+      <div class="kpi-value" id="val-${def.key}">0</div>
+      <div class="kpi-foot">
+        <span class="trend ${up ? 'up':'down'}">${up?'▲':'▼'} ${Math.abs(change).toFixed(1)}%</span>
+        <canvas class="spark" id="spark-${def.key}"></canvas>
+      </div>
+    `;
+    grid.appendChild(card);
+
+    animateCountUp(document.getElementById(`val-${def.key}`), val, def.fmt);
+
+    const sdata = sparkData(filteredData, def.dataKey);
+    const ctx = document.getElementById(`spark-${def.key}`);
+    const sc = new Chart(ctx, {
+      type:'line',
+      data:{ labels: sdata.map((_,i)=>i), datasets:[{ data: sdata, borderColor: def.color, borderWidth:2, pointRadius:0, tension:.4, fill:true, backgroundColor: def.color+'22' }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{enabled:false}, datalabels:{display:false}}, scales:{x:{display:false}, y:{display:false}} }
+    });
+    sparkCharts.push(sc);
+  });
+}
+
+function animateCountUp(el, target, fmt){
+  let start = 0;
+  const duration = 900;
+  const startTime = performance.now();
+  function tick(now){
+    const progress = Math.min(1, (now-startTime)/duration);
+    const eased = 1 - Math.pow(1-progress, 3);
+    const val = start + (target-start)*eased;
+    el.textContent = fmt(val);
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ---------- Charts ----------
+let charts = {};
+const palette = ['#7c6cff','#38bdf8','#34d399','#fbbf24','#f472b6','#a78bfa','#fb7185','#22d3ee'];
+
+function destroyChart(id){ if(charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function buildRevenueTrend(metric='revenue'){
+  destroyChart('revenueTrend');
+  const byDate = {};
+  filteredData.forEach(d => {
+    const day = d.orderDate.slice(0,10);
+    if (!byDate[day]) byDate[day] = {revenue:0, orders:0};
+    byDate[day].revenue += d.invoiced;
+    byDate[day].orders += 1;
+  });
+  const days = getAllDaysInRange(filteredData); // continuous — zero-order days included, never skipped
+  const values = days.map(d => {
+    const v = byDate[d];
+    if (!v) return 0;
+    return metric==='revenue' ? v.revenue : v.orders;
+  });
+  const ctx = document.getElementById('revenueTrendChart');
+  charts.revenueTrend = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels: days.map(d => new Date(d+'T00:00:00Z').toLocaleDateString('en-IN',{day:'2-digit',month:'short', timeZone:'UTC'})),
+      datasets:[{
+        label: metric==='revenue'?'Revenue':'Orders',
+        data: values,
+        borderColor: '#7c6cff',
+        backgroundColor: (ctx) => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,260);
+          g.addColorStop(0,'rgba(124,108,255,0.35)');
+          g.addColorStop(1,'rgba(124,108,255,0)');
+          return g;
+        },
+        fill:true, tension:.35,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointBackgroundColor: '#7c6cff',
+        pointBorderColor: getCss('--card'),
+        pointBorderWidth: 2,
+        borderWidth:2.5,
+        pointHoverBackgroundColor:'#7c6cff'
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ top: 28 } },
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{display:false}, tooltip:{ callbacks:{ label: (c) => metric==='revenue' ? fmtINR(c.raw) : c.raw + ' orders' } },
+        datalabels:{
+          display: (ctx) => ctx.chart.data.labels.length <= 45 && ctx.dataset.data[ctx.dataIndex] > 0,
+          anchor:'end', align:'top', offset:6, color: getCss('--text'), font:{weight:'700', size:9},
+          formatter: (v) => metric==='revenue' ? fmtCompact(v) : v
+        }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ maxTicksLimit:20, color: getCss('--text-dim') } },
+        y:{ grid:{ color: getCss('--card-border') }, ticks:{ callback:(v)=> metric==='revenue'?fmtCompact(v):v, color: getCss('--text-dim') } }
+      }
+    }
+  });
+}
+
+document.querySelectorAll('.chip[data-metric]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip[data-metric]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    buildRevenueTrend(chip.dataset.metric);
+  });
+});
+
+function aggregateBy(data, key, valueFn){
+  const map = {};
+  data.forEach(d => { map[d[key]] = (map[d[key]]||0) + valueFn(d); });
+  return map;
+}
+
+function buildCountPie(id, legendId, data, key, colors){
+  destroyChart(id);
+  const map = aggregateBy(data, key, () => 1);
+  const entries = Object.entries(map);
+  const labels = entries.map(e=>e[0]);
+  const values = entries.map(e=>e[1]);
+  const total = values.reduce((a,b)=>a+b,0);
+  const ctx = document.getElementById(id);
+  charts[id] = new Chart(ctx, {
+    type:'pie',
+    data:{ labels, datasets:[{ data: values, backgroundColor: colors, borderWidth:3, borderColor: getCss('--card'), hoverOffset:8 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>`${c.label}: ${c.raw} orders (${(c.raw/total*100).toFixed(1)}%)` } },
+        datalabels:{ display:true, color:'#fff', font:{weight:'700', size:11}, formatter:(v)=> total? (v/total*100).toFixed(0)+'%' : '' }
+      }
+    }
+  });
+  if (legendId){
+    document.getElementById(legendId).innerHTML = entries.map((e,i)=>`
+      <div class="legend-row">
+        <span class="legend-key"><span class="legend-dot" style="background:${colors[i%colors.length]}"></span>${e[0]}</span>
+        <span class="legend-val">${(e[1]/total*100).toFixed(1)}%</span>
+      </div>`).join('');
+  }
+}
+
+function buildTopSku(){
+  destroyChart('topSku');
+  const map = aggregateBy(filteredData, 'skuDesc', d => d.invoiced);
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const ctx = document.getElementById('topSkuChart');
+  charts.topSku = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: entries.map(e=>e[0]),
+      datasets:[{ data: entries.map(e=>e[1]), backgroundColor: '#38bdf8', borderRadius:6, barPercentage:0.6, categoryPercentage:0.75 }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ right: 46 } },
+      plugins:{
+        legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>fmtINR(c.raw) } },
+        datalabels:{ display:true, anchor:'end', align:'right', offset:4, color: getCss('--text'), font:{weight:'700', size:10}, formatter:(v)=>fmtCompact(v) }
+      },
+      scales:{
+        x:{ grid:{ color: getCss('--card-border') }, ticks:{ callback:(v)=>fmtCompact(v), color: getCss('--text-dim') } },
+        y:{ grid:{display:false}, ticks:{ color: getCss('--text-dim') } }
+      }
+    }
+  });
+}
+
+function buildStatusChart(){
+  destroyChart('status');
+  // Show every status value that actually appears in the data — not a
+  // hardcoded guess at names. Real exports use labels like "Shipped
+  // Complete" or "Pick Complete" that a fixed list would miss and
+  // silently render as zero.
+  const map = aggregateBy(filteredData, 'status', () => 1);
+  const labels = Object.keys(map).sort((a,b) => map[b]-map[a]);
+  const values = labels.map(s => map[s] || 0);
+  const colors = labels.map((_,i) => palette[i % palette.length]);
+  const ctx = document.getElementById('statusChart');
+  charts.status = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data: values, backgroundColor: colors, borderRadius:8, barPercentage:0.6, categoryPercentage:0.75 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ top: 24 } },
+      plugins:{
+        legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>c.raw+' orders' } },
+        datalabels:{ display:true, anchor:'end', align:'top', offset:4, color: getCss('--text'), font:{weight:'700', size:11}, formatter:(v)=>v }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ color: getCss('--text-dim'), font:{size:10} } },
+        y:{ grid:{ color: getCss('--card-border') }, ticks:{ color: getCss('--text-dim') }, beginAtZero:true }
+      }
+    }
+  });
+}
+
+function buildGeoChart(){
+  destroyChart('geo');
+  const map = aggregateBy(filteredData, 'state', d => d.invoiced);
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const ctx = document.getElementById('geoChart');
+  charts.geo = new Chart(ctx, {
+    type:'bar',
+    data:{ labels: entries.map(e=>e[0]), datasets:[{ data: entries.map(e=>e[1]), backgroundColor: '#a78bfa', borderRadius:6, barPercentage:0.6, categoryPercentage:0.75 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ top: 24 } },
+      plugins:{
+        legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>fmtINR(c.raw) } },
+        datalabels:{ display:true, anchor:'end', align:'top', offset:4, color: getCss('--text'), font:{weight:'700', size:10}, formatter:(v)=>fmtCompact(v) }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ color: getCss('--text-dim'), font:{size:10} } },
+        y:{ grid:{ color: getCss('--card-border') }, ticks:{ callback:(v)=>fmtCompact(v), color: getCss('--text-dim') } }
+      }
+    }
+  });
+}
+
+function buildDiscountMarginTrend(){
+  destroyChart('discountMargin');
+  const byDate = {};
+  filteredData.forEach(d => {
+    const day = d.orderDate.slice(0,10);
+    const discPct = d.price*d.quantity ? (d.discount/(d.price*d.quantity))*100 : 0;
+    if (!byDate[day]) byDate[day] = { discSum:0, gmSum:0, count:0 };
+    byDate[day].discSum += discPct;
+    byDate[day].gmSum += d.gmPercent;
+    byDate[day].count += 1;
+  });
+  const days = Object.keys(byDate).sort();
+  const discVals = days.map(d => byDate[d].discSum / byDate[d].count);
+  const gmVals = days.map(d => byDate[d].gmSum / byDate[d].count);
+  const ctx = document.getElementById('discountMarginChart');
+  charts.discountMargin = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels: days.map(d => new Date(d+'T00:00:00Z').toLocaleDateString('en-IN',{day:'2-digit',month:'short', timeZone:'UTC'})),
+      datasets:[
+        { label:'Avg Discount %', data:discVals, borderColor:'#fbbf24', backgroundColor:'#fbbf2422', yAxisID:'yDisc', tension:.35, pointRadius:3, pointHoverRadius:5, borderWidth:2, fill:false },
+        { label:'Avg Margin %', data:gmVals, borderColor:'#7c6cff', backgroundColor:'#7c6cff22', yAxisID:'yGm', tension:.35, pointRadius:3, pointHoverRadius:5, borderWidth:2, fill:false }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ display:true, position:'top', labels:{ color:getCss('--text-dim'), boxWidth:10, font:{size:10} } },
+        tooltip:{ callbacks:{ label:(c)=> `${c.dataset.label}: ${c.raw.toFixed(1)}%` } },
+        datalabels:{ display:false }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ color:getCss('--text-dim'), maxTicksLimit:8, font:{size:9} } },
+        yDisc:{ position:'left', min:0, grid:{ color:getCss('--card-border') }, ticks:{ callback:v=>v+'%', color:getCss('--text-dim') } },
+        yGm:{ position:'right', min:0, grid:{ display:false }, ticks:{ callback:v=>v+'%', color:getCss('--text-dim') } }
+      }
+    }
+  });
+}
+
+function buildVendorChart(){
+  destroyChart('vendor');
+  const map = aggregateBy(filteredData, 'vendorName', d => d.invoiced);
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]); // descending: highest revenue at the top
+  const wrap = document.getElementById('vendorCanvasWrap');
+  const canvas = document.getElementById('vendorChart');
+  // Fixed height per vendor row so bars always have breathing room; the
+  // outer .chart-box.scrollable stays a fixed size and scrolls once the
+  // canvas (sized to fit every vendor) grows taller than it.
+  const rowHeight = 38;
+  const neededHeight = Math.max(260, entries.length * rowHeight);
+  wrap.style.height = neededHeight + 'px';
+  charts.vendor = new Chart(canvas, {
+    type:'bar',
+    data:{ labels: entries.map(e=>e[0]), datasets:[{ data: entries.map(e=>e[1]), backgroundColor: '#34d399', borderRadius:8, barPercentage:0.55, categoryPercentage:0.7 }] },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ right: 50 } },
+      plugins:{
+        legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>fmtINR(c.raw) } },
+        datalabels:{ display:true, anchor:'end', align:'right', offset:4, color: getCss('--text'), font:{weight:'700', size:10}, formatter:(v)=>fmtCompact(v) }
+      },
+      scales:{
+        x:{ grid:{ color: getCss('--card-border') }, ticks:{ callback:(v)=>fmtCompact(v), color: getCss('--text-dim') } },
+        y:{ grid:{display:false}, ticks:{ color: getCss('--text-dim') } }
+      }
+    }
+  });
+}
+
+function buildSubCategory(){
+  destroyChart('subCategory');
+  const map = aggregateBy(filteredData, 'subCategory', d => d.invoiced);
+  const entries = Object.entries(map).filter(e => e[0]).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const ctx = document.getElementById('subCategoryChart');
+  charts.subCategory = new Chart(ctx, {
+    type:'bar',
+    data:{ labels: entries.map(e=>e[0]), datasets:[{ data: entries.map(e=>e[1]), backgroundColor: '#f472b6', borderRadius:6, barPercentage:0.6, categoryPercentage:0.75 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ top: 24 } },
+      plugins:{
+        legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>fmtINR(c.raw) } },
+        datalabels:{ display:true, anchor:'end', align:'top', offset:4, color: getCss('--text'), font:{weight:'700', size:9}, formatter:(v)=>fmtCompact(v) }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ color: getCss('--text-dim'), font:{size:9} } },
+        y:{ grid:{ color: getCss('--card-border') }, ticks:{ callback:(v)=>fmtCompact(v), color: getCss('--text-dim') } }
+      }
+    }
+  });
+}
+
+function buildOrderValueBreakdown(){
+  destroyChart('breakdown');
+  const totals = {
+    'Gross Price': filteredData.reduce((s,d)=>s+d.price*d.quantity,0),
+    'Ship Cost': filteredData.reduce((s,d)=>s+d.shipCost,0),
+    'Packing Cost': filteredData.reduce((s,d)=>s+d.packingCost,0),
+    'Discount': filteredData.reduce((s,d)=>s+d.discount,0),
+    'Tax': filteredData.reduce((s,d)=>s+d.tax,0),
+  };
+  const labels = Object.keys(totals);
+  const values = Object.values(totals);
+  const colors = ['#38bdf8','#34d399','#fbbf24','#fb7185','#a78bfa'];
+  const ctx = document.getElementById('breakdownChart');
+  charts.breakdown = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data: values, backgroundColor: colors, borderRadius:8, barPercentage:0.6, categoryPercentage:0.75 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ top: 24 } },
+      plugins:{
+        legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>fmtINR(c.raw) } },
+        datalabels:{ display:true, anchor:'end', align:'top', offset:4, color: getCss('--text'), font:{weight:'700', size:10}, formatter:(v)=>fmtCompact(v) }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ color: getCss('--text-dim'), font:{size:10} } },
+        y:{ grid:{ color: getCss('--card-border') }, ticks:{ callback:(v)=>fmtCompact(v), color: getCss('--text-dim') } }
+      }
+    }
+  });
+}
+
+function buildDiscountCode(){
+  destroyChart('discountCode');
+  const map = aggregateBy(filteredData, 'discountCode', () => 1);
+  const merged = {};
+  Object.entries(map).forEach(([k,v]) => {
+    const key = (k && String(k).trim()) ? k : 'No Code';
+    merged[key] = (merged[key]||0) + v;
+  });
+  const entries = Object.entries(merged).sort((a,b)=>b[1]-a[1]);
+  const ctx = document.getElementById('discountCodeChart');
+  charts.discountCode = new Chart(ctx, {
+    type:'bar',
+    data:{ labels: entries.map(e=>e[0]), datasets:[{ data: entries.map(e=>e[1]), backgroundColor: '#22d3ee', borderRadius:6, barPercentage:0.6, categoryPercentage:0.75 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ top: 24 } },
+      plugins:{
+        legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>c.raw+' orders' } },
+        datalabels:{ display:true, anchor:'end', align:'top', offset:4, color: getCss('--text'), font:{weight:'700', size:10}, formatter:(v)=>v }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ color: getCss('--text-dim'), font:{size:9} } },
+        y:{ grid:{ color: getCss('--card-border') }, ticks:{ color: getCss('--text-dim') } }
+      }
+    }
+  });
+}
+
+function refreshAllCharts(){
+  buildRevenueTrend(document.querySelector('.chip[data-metric].active').dataset.metric);
+  buildTopSku();
+  buildStatusChart();
+  buildGeoChart();
+  buildDiscountMarginTrend();
+  buildCountPie('orderTypeChart','orderTypeLegend', filteredData, 'orderType', ['#34d399','#fbbf24']);
+  buildVendorChart();
+  buildCountPie('onHoldChart','onHoldLegend', filteredData, 'onHoldStatus', ['#8b8d9a','#fb7185']);
+  buildCountPie('replacementChart','replacementLegend', filteredData, 'replacementOrder', ['#8b8d9a','#38bdf8']);
+  buildSubCategory();
+  buildOrderValueBreakdown();
+  buildDiscountCode();
+}
+
+// ---------- Table ----------
+let sortKey = 'orderDate', sortDir = -1, currentPage = 1, pageSize = 10;
+
+function populateFilters(){
+  const statuses = [...new Set(RAW_DATA.map(d=>d.status))].sort();
+  const channels = [...new Set(RAW_DATA.map(d=>d.channelName))].sort();
+  const sf = document.getElementById('statusFilter');
+  const cf = document.getElementById('channelFilter');
+  sf.innerHTML = '<option value="">All statuses</option>';
+  cf.innerHTML = '<option value="">All channels</option>';
+  statuses.forEach(s => sf.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+  channels.forEach(c => cf.insertAdjacentHTML('beforeend', `<option value="${c}">${c}</option>`));
+}
+
+function getTableData(){
+  const search = document.getElementById('tableSearch').value.toLowerCase();
+  const statusF = document.getElementById('statusFilter').value;
+  const channelF = document.getElementById('channelFilter').value;
+  let data = filteredData.filter(d => {
+    const matchSearch = !search || [d.orderNo, d.city, d.skuDesc, d.category, d.vendorName].join(' ').toLowerCase().includes(search);
+    const matchStatus = !statusF || d.status === statusF;
+    const matchChannel = !channelF || d.channelName === channelF;
+    return matchSearch && matchStatus && matchChannel;
+  });
+  data.sort((a,b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (sortKey === 'orderDate'){ av = new Date(av); bv = new Date(bv); }
+    if (av < bv) return -1*sortDir;
+    if (av > bv) return 1*sortDir;
+    return 0;
+  });
+  return data;
+}
+
+function renderTable(){
+  const data = getTableData();
+  document.getElementById('tableCount').textContent = `${data.length} orders`;
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  currentPage = Math.min(currentPage, totalPages);
+  const pageData = data.slice((currentPage-1)*pageSize, currentPage*pageSize);
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = pageData.map(d => `
+    <tr>
+      <td style="font-weight:600">${d.orderNo}</td>
+      <td>${new Date(d.orderDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</td>
+      <td>${d.category}</td>
+      <td>${d.skuDesc}</td>
+      <td>${d.vendorName}</td>
+      <td>${d.city}</td>
+      <td>${d.channelName}</td>
+      <td>${d.orderType}</td>
+      <td><span class="badge">${d.status}</span></td>
+      <td>${d.quantity}</td>
+      <td>${fmtINR(d.invoiced)}</td>
+      <td>${d.gmPercent}%</td>
+    </tr>
+  `).join('') || '<tr><td colspan="12" style="text-align:center; color:var(--text-dim); padding:24px;">No orders match your filters</td></tr>';
+
+  const pag = document.getElementById('pagination');
+  pag.innerHTML = `
+    <span>Page ${currentPage} of ${totalPages}</span>
+    <button class="page-btn" id="prevPage" ${currentPage===1?'disabled':''}>‹</button>
+    <button class="page-btn" id="nextPage" ${currentPage===totalPages?'disabled':''}>›</button>
+  `;
+  document.getElementById('prevPage').onclick = () => { currentPage--; renderTable(); };
+  document.getElementById('nextPage').onclick = () => { currentPage++; renderTable(); };
+}
+
+document.querySelectorAll('#ordersTable thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+    renderTable();
+  });
+});
+['tableSearch'].forEach(id => document.getElementById(id).addEventListener('input', () => { currentPage=1; renderTable(); }));
+['statusFilter','channelFilter'].forEach(id => document.getElementById(id).addEventListener('change', () => { currentPage=1; renderTable(); }));
+
+// ---------- Init ----------
+Chart.register(ChartDataLabels);
+Chart.defaults.set('plugins.datalabels', { display: false }); // opt-in per chart
+Chart.defaults.font.family = "Inter, sans-serif";
+Chart.defaults.color = getCss('--text-dim');
+Chart.defaults.borderColor = getCss('--card-border');
+
+(function init(){
+  computePeriods();
+  populateFilters();
+  renderKPIs();
+  refreshAllCharts();
+  renderTable();
+})();
+</script>
+</body>
+</html>
